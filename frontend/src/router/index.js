@@ -33,10 +33,7 @@ const routes = [
         name: 'ForgetPassword1', 
         component: forgetpassword1 
     },
-    {
-    path: '/',
-    redirect: '/login'
-    },
+    
     { 
         path: '/forgetpassword2', 
         name: 'ForgetPassword2', 
