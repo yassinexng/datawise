@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from typing import List
+from groq import Groq
 
 from app.api import grok
 from app.db_config import get_database_connection
@@ -10,6 +11,7 @@ from app import models
 from app.core.EDA import get_summary
 
 import io
+import os
 import re
 import pandas as pd
 import numpy as np
@@ -43,7 +45,6 @@ async def columns_and_rows(
     }
     return response
 
-
 @router.get("/dataset/{dataset_id}/suggestions")
 async def suggestions(
     dataset_id: int,
@@ -59,17 +60,26 @@ async def suggestions(
 
     summary, dataset = await get_summary(dataset)
 
+    client = Groq(api_key=os.getenv("GROK_API_KEY"))
+
     prompt = (
-        f"Based on this information: {summary}\n"
-        "Suggest cleaning steps for the dataset.\n"
-        'Return ONLY a JSON array in this format:\n'
-        '[{"suggested_change": "suggestion"}]'
+        f"Here is a summary of a dataset:\n{summary}\n\n"
+        "Suggest practical data cleaning steps for this dataset.\n"
+        "Return ONLY a JSON array, nothing else, in this exact format:\n"
+        '[{"suggested_change": "your suggestion here"}]'
     )
 
-    answer = await grok.ask_grok(summary, prompt)
-
-    if answer.startswith("Error:"):
-        raise HTTPException(status_code=503, detail=answer)
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        answer = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str:
+            raise HTTPException(status_code=429, detail="AI rate limit reached. Please wait a few minutes and try again.")
+        raise HTTPException(status_code=503, detail=f"AI service error: {error_str}")
 
     try:
         cleaned = re.sub(r"```(?:json)?|```", "", answer).strip()
@@ -77,9 +87,8 @@ async def suggestions(
     except json.JSONDecodeError:
         suggestions_json = [{"suggested_change": "Error parsing model response"}]
 
-    return {
-        "suggestions": suggestions_json
-    }
+    return {"suggestions": suggestions_json}
+
 
 @router.post("/dataset/{dataset_id}/clean")
 async def clean_dataset(
