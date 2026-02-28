@@ -1,3 +1,65 @@
-node_modules/
-backend/data/ml_engine.db
+
+# Python
+
+__pycache__/
+
+*.py[cod]
+
+*.class
+
+.venv/
+
+env/
+
+venv/
+
+ENV/
+
+
+
+# Databases
+
+*.db
+
+*.sqlite3
+
+
+
+# Environment variables
+
 .env
+
+.env.local
+
+
+
+# Node / Vue
+
+node_modules/
+
+dist/
+
+dist-ssr/
+
+*.local
+
+
+
+# IDEs
+
+.vscode/
+
+.idea/
+
+*.swp
+
+*.swo
+
+
+
+# OS junk
+
+.DS_Store
+
+Thumbs.db
+
