@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "sqlite": "^5.1.1",
+    "sqlite-vec": "^0.1.7-alpha.2",
+    "sqlite3": "^5.1.7",
+    "vue-router": "^4.6.4"
+  }
+}
